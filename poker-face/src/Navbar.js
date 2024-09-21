@@ -11,12 +11,6 @@ function Navbar() {
         </div>
         <div className="flex space-x-4">
           <a 
-            href="/register" 
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition"
-          >
-            Register
-          </a>
-          <a 
             href="/login" 
             className="border border-blue-600 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition"
           >

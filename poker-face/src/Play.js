@@ -1,4 +1,3 @@
-// Play.js
 import React, { useState } from "react";
 
 function Play() {
@@ -7,6 +6,7 @@ function Play() {
   const [rows, setRows] = useState([{ color: "", cashValue: "" }]);
   const [picture, setPicture] = useState(null);
   const [error, setError] = useState("");
+  const [isBuyIn, setIsBuyIn] = useState(true);
 
   const handleAddRow = () => {
     setRows([...rows, { color: "", cashValue: "" }]);
@@ -26,7 +26,7 @@ function Play() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!picture || !["image/jpeg", "image/png"].includes(picture.type)) {
       setError("Please upload a valid picture (jpg or png).");
       return;
@@ -38,8 +38,9 @@ function Play() {
     }
 
     setError("");
-    
+
     console.log({
+      mode: isBuyIn ? "Buy In" : "Cash Out",
       picture,
       playerVenmo,
       houseVenmo,
@@ -50,10 +51,27 @@ function Play() {
   return (
     <div className="min-h-screen flex justify-center items-center p-6">
       <div className="max-w-lg w-full bg-white bg-opacity-20 p-8 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold text-center text-gray-100 mb-6">Go All In</h1>
+        <h1 className="text-4xl font-bold text-center text-gray-100 mb-6">Go All In</h1>
+        
+        <div className="flex justify-center mb-4">
+          <button
+            className={`px-4 py-2 font-bold rounded-lg ${isBuyIn ? "bg-blue-600 text-white" : "bg-white text-blue-600"}`}
+            onClick={() => setIsBuyIn(true)}
+          >
+            Buy In
+          </button>
+          <button
+            className={`px-4 py-2 font-bold rounded-lg ml-4 ${!isBuyIn ? "bg-blue-600 text-white" : "bg-white text-blue-600"}`}
+            onClick={() => setIsBuyIn(false)}
+          >
+            Cash Out
+          </button>
+        </div>
+
         {error && (
           <div className="text-red-500 text-center mb-4">{error}</div>
         )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-gray-200 font-bold mb-2">Picture (jpg or png)</label>
@@ -132,7 +150,7 @@ function Play() {
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors"
             >
-              Buy In
+              {isBuyIn ? "Buy In" : "Cash Out"}
             </button>
           </div>
         </form>
