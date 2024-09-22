@@ -14,22 +14,6 @@ function Play() {
   );
   const [profit, setProfit] = useState(null);
 
-  const handleAddRow = () => {
-    setRows([...rows, { color: "", cashValue: "" }]);
-  };
-
-  const handleRowChange = (index, e) => {
-    const newRows = rows.map((row, i) =>
-      i === index ? { ...row, [e.target.name]: e.target.value } : row
-    );
-    setRows(newRows);
-  };
-
-  const handleDeleteRow = (index) => {
-    const newRows = rows.filter((_, i) => i !== index);
-    setRows(newRows);
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
