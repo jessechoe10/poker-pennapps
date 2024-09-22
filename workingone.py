@@ -27,7 +27,11 @@ def detect_chip_color(image, roi):
     return detected_color
 
 
-def count_stacked_chips(image_path):
+def count_stacked_chips(image_path, stack_width=150):
+    """
+    Detects the stack of chips, draws the bounding box based on the height and predetermined width,
+    and estimates the number of chips.
+    """
     # Read the image
     image = cv2.imread(image_path)
     original = image.copy()
@@ -65,27 +69,36 @@ def count_stacked_chips(image_path):
             (bx, by, bw, bh) = box
             if by <= y + h:  # If the next contour is close enough to the current bounding box
                 merged_box = (
-                min(x, bx), min(y, by), max(x + w, bx + bw) - min(x, bx), max(y + h, by + bh) - min(y, by))
+                    min(x, bx), min(y, by), max(x + w, bx + bw) - min(x, bx), max(y + h, by + bh) - min(y, by))
             else:
                 break
 
-        # Draw the final bounding rectangle
+        # Get the height from the merged box
         (x, y, w, h) = merged_box
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        # Now apply the predetermined width instead of using the calculated one
+        new_w = stack_width
+
+        # Adjust the x-coordinate to center the new width around the detected contour's center
+        x_center = x + w // 2
+        x_new = x_center - new_w // 2
+
+        # Draw the bounding rectangle using the new width
+        cv2.rectangle(image, (x_new, y), (x_new + new_w, y + h), (0, 255, 0), 2)
 
         # Get the region of interest (ROI) for color detection
-        roi = original[y:y + h, x:x + w]
+        roi = original[y:y + h, x_new:x_new + new_w]
 
         # Detect chip color
         detected_color = detect_chip_color(image, roi)
 
         # Estimate number of chips based on height
-        single_chip_height = 30  # Adjust this value based on the typical height of a single chip
+        single_chip_height = 115  # Adjust this value based on the typical height of a single chip
         estimated_chips = round(h / single_chip_height)
 
         # Draw text with the estimated count and chip color
         label = f'{detected_color} Chips: {estimated_chips}'
-        cv2.putText(image, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+        cv2.putText(image, label, (x_new, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
         print(f"Estimated number of chips: {estimated_chips}, Color: {detected_color}")
     else:
@@ -98,6 +111,6 @@ def count_stacked_chips(image_path):
     cv2.destroyAllWindows()
 
 
-# Use the function
-image_path = '/path/to/your/image.jpg'  # Replace with your image path
-count_stacked_chips(image_path)
+# Use the function and provide a predetermined width for the chip stack
+image_path = 'fix routing to image path'  # Replace with your image path
+count_stacked_chips(image_path, stack_width=1300)  # Replace '150' with your predetermined width
