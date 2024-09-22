@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
 function Play() {
-  const [rows, setRows] = useState([{ color: "", cashValue: "" }]);
   const [picture, setPicture] = useState(null);
   const [error, setError] = useState("");
   const [isBuyIn, setIsBuyIn] = useState(true);
