@@ -47,7 +47,7 @@ function Play() {
     } else if (pictureName === "r18.jpeg") {
       setTotalValue(3.6);
     } else {
-      setError("Invalid picture name. Please use r2.JPG, r8.png, or r18.png.");
+      setError("Invalid picture.");
       return;
     }
 
