@@ -15,7 +15,7 @@ function About() {
       bio: "UPenn M&T | Poker + Finance Degen",
     },
     {
-      name: "Aakarsh Agarwal",
+      name: "Aakarsh Agrawal",
       role: "Co-Founder",
       image: "https://media.licdn.com/dms/image/v2/D5603AQEfBk53ibN7Uw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1705783266630?e=1732147200&v=beta&t=VR05bLu7YGzfIvL6fDuNOxbcswxDYq9oLmF9gFR61DE",
       bio: "UPenn M&T | Team Unc",

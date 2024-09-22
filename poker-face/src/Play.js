@@ -1,12 +1,18 @@
 import React, { useState } from "react";
 
 function Play() {
-  const [playerVenmo, setPlayerVenmo] = useState("");
-  const [houseVenmo, setHouseVenmo] = useState("");
   const [rows, setRows] = useState([{ color: "", cashValue: "" }]);
   const [picture, setPicture] = useState(null);
   const [error, setError] = useState("");
   const [isBuyIn, setIsBuyIn] = useState(true);
+  const [email, setEmail] = useState("");
+  const [amount, setAmount] = useState(0);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [transactions, setTransactions] = useState(
+    JSON.parse(localStorage.getItem("transactions")) || {}
+  );
+  const [profit, setProfit] = useState(null);
 
   const handleAddRow = () => {
     setRows([...rows, { color: "", cashValue: "" }]);
@@ -32,27 +38,60 @@ function Play() {
       return;
     }
 
-    if (!playerVenmo || !houseVenmo) {
-      setError("Please provide both your Venmo and the House Venmo username.");
+    if (!firstName || !lastName) {
+      setError("Please enter both first and last names.");
       return;
     }
 
     setError("");
 
-    console.log({
-      mode: isBuyIn ? "Buy In" : "Cash Out",
-      picture,
-      playerVenmo,
-      houseVenmo,
-      rows,
-    });
+    const fullName = `${firstName} ${lastName}`;
+
+    // Ensure alternating buy-in and cash-out
+    const userTransactions = transactions[fullName] || [];
+    const lastTransaction = userTransactions[userTransactions.length - 1];
+    if (lastTransaction) {
+      const lastType = Object.keys(lastTransaction)[0]; // Either "Buy In" or "Cash Out"
+      if ((lastType === "Buy In" && isBuyIn) || (lastType === "Cash Out" && !isBuyIn)) {
+        setError(`You must ${isBuyIn ? "cash out" : "buy in"} before ${isBuyIn ? "buying in" : "cashing out"} again.`);
+        return;
+      }
+    }
+
+    const transactionType = isBuyIn ? "Buy In" : "Cash Out";
+    const newTransaction = { [transactionType]: parseFloat(amount) };
+
+    const updatedTransactions = {
+      ...transactions,
+      [fullName]: [...(transactions[fullName] || []), newTransaction],
+    };
+
+    setTransactions(updatedTransactions);
+    localStorage.setItem("transactions", JSON.stringify(updatedTransactions));
+
+    // Calculate profit if cashing out
+    if (!isBuyIn) {
+      const totalBuyIns = userTransactions
+        .filter((t) => t["Buy In"])
+        .reduce((acc, t) => acc + t["Buy In"], 0);
+      const totalCashOuts = userTransactions
+        .filter((t) => t["Cash Out"])
+        .reduce((acc, t) => acc + t["Cash Out"], 0);
+
+      const currentProfit = totalCashOuts + parseFloat(amount) - totalBuyIns;
+      setProfit(currentProfit);
+    } else {
+      setProfit(null); // Reset profit if a buy-in occurs
+    }
+
+    console.log("Transactions Updated", updatedTransactions);
   };
 
   return (
     <div className="min-h-screen flex justify-center items-center p-6">
       <div className="max-w-lg w-full bg-white bg-opacity-20 p-8 rounded-lg shadow-lg">
         <h1 className="text-4xl font-bold text-center text-gray-100 mb-6">Go All In</h1>
-        
+
         <div className="flex justify-center mb-4">
           <button
             className={`px-4 py-2 font-bold rounded-lg ${isBuyIn ? "bg-blue-600 text-white" : "bg-white text-blue-600"}`}
@@ -74,75 +113,54 @@ function Play() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
+            <label className="block text-gray-200 font-bold mb-2">First Name</label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Enter your first name"
+              className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-200 font-bold mb-2">Last Name</label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Enter your last name"
+              className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
+            />
+          </div>
+          <div>
             <label className="block text-gray-200 font-bold mb-2">Picture (jpg or png)</label>
             <input
               type="file"
-              accept="image/jpeg, image/png;capture=camera"
+              accept="image/jpeg, image/png"
               onChange={(e) => setPicture(e.target.files[0])}
               className="block w-full text-gray-700 border border-gray-300 rounded-lg p-2 bg-white"
             />
           </div>
           <div>
-            <label className="block text-gray-200 font-bold mb-2">
-              Your Venmo Username
-            </label>
+            <label className="block text-gray-200 font-bold mb-2">Email</label>
             <input
-              type="text"
-              value={playerVenmo}
-              onChange={(e) => setPlayerVenmo(e.target.value)}
-              className="block w-full text-gray-700 border border-gray-300 rounded-lg p-2 bg-white"
-              placeholder="Enter your Venmo username"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
             />
           </div>
           <div>
-            <label className="block text-gray-200 font-bold mb-2">Cash Entries</label>
-            {rows.map((row, index) => (
-              <div key={index} className="flex space-x-4 mb-2 items-center">
-                <input
-                  type="text"
-                  name="color"
-                  value={row.color}
-                  onChange={(e) => handleRowChange(index, e)}
-                  placeholder="Color"
-                  className="w-1/3 p-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
-                />
-                <input
-                  type="number"
-                  name="cashValue"
-                  value={row.cashValue}
-                  onChange={(e) => handleRowChange(index, e)}
-                  placeholder="Cash Value"
-                  className="w-1/3 p-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
-                  step="0.01"
-                  min="0"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleDeleteRow(index)}
-                  className="text-red-500 font-bold hover:text-red-700 transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={handleAddRow}
-              className="text-blue-200 font-bold mt-2 hover:text-blue-400"
-            >
-              + Add Row
-            </button>
-          </div>
-          <div>
-            <label className="block text-gray-200 font-bold mb-2">
-              House Venmo Username
-            </label>
+            <label className="block text-gray-200 font-bold mb-2">Amount</label>
             <input
-              type="text"
-              value={houseVenmo}
-              onChange={(e) => setHouseVenmo(e.target.value)}
-              className="block w-full text-gray-700 border border-gray-300 rounded-lg p-2 bg-white"
-              placeholder="Enter house Venmo username"
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Enter amount"
+              className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
+              step="0.01"
+              min="0"
             />
           </div>
           <div>
@@ -154,6 +172,12 @@ function Play() {
             </button>
           </div>
         </form>
+
+        {profit !== null && (
+          <div className="text-green-500 text-center mt-4">
+            Profit: ${profit.toFixed(2)}
+          </div>
+        )}
       </div>
     </div>
   );
