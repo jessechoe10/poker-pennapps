@@ -1,0 +1,42 @@
+import cv2
+import numpy as np
+
+# Load an image from file
+#"C:\\AaravWorld\\AaravWorld\\PennApps2024Poker\\TrainingData\\RedSingleStack\\9Chip\\IMG_7547.png"
+#C:\\AaravWorld\\AaravWorld\\PennApps2024Poker\\Python\\pythonProject\\tmpoz9rjqoq.PNG
+##C:\\Users\\aarav\\Downloads\\PokerStack.jpg - blue
+image = cv2.imread('C:\\Users\\aarav\\Downloads\\PokerStack.jpg')
+
+w = 800
+h = 600
+image = cv2.resize(image, (w, h))
+
+# Convert the image to grayscale
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# Apply GaussianBlur to reduce noise
+blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+# Apply adaptive thresholding
+thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                               cv2.THRESH_BINARY_INV, 11, 2)
+
+# Find contours in the thresholded image
+contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Find the largest contour
+if contours:
+    largest_contour = max(contours, key=cv2.contourArea)
+
+    # Draw a bounding box around the largest contour
+    if cv2.contourArea(largest_contour) > 100:  # Filter out small areas
+        x, y, w, h = cv2.boundingRect(largest_contour)
+        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+# Show the output image with the bounding box
+cv2.imshow('Bounding Box', image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Crop the image based on the bounding box
+cropped_image = image[y:y + h, x:x + w]
