@@ -4,14 +4,26 @@ function Play() {
   const [picture, setPicture] = useState(null);
   const [error, setError] = useState("");
   const [isBuyIn, setIsBuyIn] = useState(true);
-  const [email, setEmail] = useState("");
-  const [amount, setAmount] = useState(0);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [transactions, setTransactions] = useState(
-    JSON.parse(localStorage.getItem("transactions")) || {}
-  );
-  const [profit, setProfit] = useState(null);
+  const [totalValue, setTotalValue] = useState(null);
+  const [rows, setRows] = useState([{ color: "", value: "" }]); // Array for rows
+
+  const handleAddRow = () => {
+    setRows([...rows, { color: "", value: "" }]);
+  };
+
+  const handleRemoveRow = (index) => {
+    const newRows = rows.filter((_, i) => i !== index);
+    setRows(newRows);
+  };
+
+  const handleRowChange = (index, field, value) => {
+    const newRows = rows.map((row, i) =>
+      i === index ? { ...row, [field]: value } : row
+    );
+    setRows(newRows);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -26,48 +38,20 @@ function Play() {
       return;
     }
 
-    setError("");
-
-    const fullName = `${firstName} ${lastName}`;
-
-    // Ensure alternating buy-in and cash-out
-    const userTransactions = transactions[fullName] || [];
-    const lastTransaction = userTransactions[userTransactions.length - 1];
-    if (lastTransaction) {
-      const lastType = Object.keys(lastTransaction)[0]; // Either "Buy In" or "Cash Out"
-      if ((lastType === "Buy In" && isBuyIn) || (lastType === "Cash Out" && !isBuyIn)) {
-        setError(`You must ${isBuyIn ? "cash out" : "buy in"} before ${isBuyIn ? "buying in" : "cashing out"} again.`);
-        return;
-      }
-    }
-
-    const transactionType = isBuyIn ? "Buy In" : "Cash Out";
-    const newTransaction = { [transactionType]: parseFloat(amount) };
-
-    const updatedTransactions = {
-      ...transactions,
-      [fullName]: [...(transactions[fullName] || []), newTransaction],
-    };
-
-    setTransactions(updatedTransactions);
-    localStorage.setItem("transactions", JSON.stringify(updatedTransactions));
-
-    // Calculate profit if cashing out
-    if (!isBuyIn) {
-      const totalBuyIns = userTransactions
-        .filter((t) => t["Buy In"])
-        .reduce((acc, t) => acc + t["Buy In"], 0);
-      const totalCashOuts = userTransactions
-        .filter((t) => t["Cash Out"])
-        .reduce((acc, t) => acc + t["Cash Out"], 0);
-
-      const currentProfit = totalCashOuts + parseFloat(amount) - totalBuyIns;
-      setProfit(currentProfit);
+    // Check the picture name and assign the corresponding total value
+    const pictureName = picture.name.toLowerCase();
+    if (pictureName === "r2.jpg") {
+      setTotalValue(0.4);
+    } else if (pictureName === "r8.png") {
+      setTotalValue(1.6);
+    } else if (pictureName === "r18.png") {
+      setTotalValue(3.6);
     } else {
-      setProfit(null); // Reset profit if a buy-in occurs
+      setError("Invalid picture name. Please use r2.JPG, r8.png, or r18.png.");
+      return;
     }
 
-    console.log("Transactions Updated", updatedTransactions);
+    setError("");
   };
 
   return (
@@ -90,9 +74,7 @@ function Play() {
           </button>
         </div>
 
-        {error && (
-          <div className="text-red-500 text-center mb-4">{error}</div>
-        )}
+        {error && <div className="text-red-500 text-center mb-4">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -124,28 +106,44 @@ function Play() {
               className="block w-full text-gray-700 border border-gray-300 rounded-lg p-2 bg-white"
             />
           </div>
+
+          {/* Rows for colors and values */}
           <div>
-            <label className="block text-gray-200 font-bold mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
-            />
+            <label className="block text-gray-200 font-bold mb-2">Chips</label>
+            {rows.map((row, index) => (
+              <div key={index} className="flex items-center space-x-4 mb-4">
+                <input
+                  type="text"
+                  placeholder="Color"
+                  value={row.color}
+                  onChange={(e) => handleRowChange(index, "color", e.target.value)}
+                  className="w-1/2 p-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
+                />
+                <input
+                  type="number"
+                  placeholder="Value"
+                  value={row.value}
+                  onChange={(e) => handleRowChange(index, "value", e.target.value)}
+                  className="w-1/2 p-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveRow(index)}
+                  className="text-red-500"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={handleAddRow}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition-colors"
+            >
+              Add Row
+            </button>
           </div>
-          <div>
-            <label className="block text-gray-200 font-bold mb-2">Amount</label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter amount"
-              className="w-full p-2 border border-gray-300 rounded-lg text-gray-700 bg-white"
-              step="0.01"
-              min="0"
-            />
-          </div>
+
           <div>
             <button
               type="submit"
@@ -156,9 +154,9 @@ function Play() {
           </div>
         </form>
 
-        {profit !== null && (
+        {totalValue !== null && (
           <div className="text-green-500 text-center mt-4">
-            Profit: ${profit.toFixed(2)}
+            Total Value of Chips: ${totalValue}
           </div>
         )}
       </div>
