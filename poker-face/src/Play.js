@@ -40,11 +40,11 @@ function Play() {
 
     // Check the picture name and assign the corresponding total value
     const pictureName = picture.name.toLowerCase();
-    if (pictureName === "r2.jpg") {
+    if (pictureName === "r2.jpeg") {
       setTotalValue(0.4);
-    } else if (pictureName === "r8.png") {
+    } else if (pictureName === "r8.jpeg") {
       setTotalValue(1.6);
-    } else if (pictureName === "r18.png") {
+    } else if (pictureName === "r18.jpeg") {
       setTotalValue(3.6);
     } else {
       setError("Invalid picture name. Please use r2.JPG, r8.png, or r18.png.");
